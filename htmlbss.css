@@ -1,0 +1,92 @@
+/* Custom CSS */
+
+:root {
+    --sc-blue: #0066cc;
+    --sc-green: #3be430; /* Adjusted for better visibility */
+    --sc-dark: #1a1a1a;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+}
+
+/* Header */
+.navbar-brand img {
+    height: 40px;
+}
+
+.nav-link {
+    font-size: 0.8rem;
+    color: #666 !important;
+    font-weight: 500;
+    margin: 0 10px;
+}
+
+.btn-outline-secondary {
+    font-size: 0.75rem;
+    color: #666;
+    border: 1px solid #ccc;
+    padding: 5px 10px;
+}
+
+/* Hero Section */
+.hero-section {
+    position: relative;
+    height: 70vh;
+    min-height: 600px;
+    background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('bg1.jfif'); /* Add your background image path */
+    background-size: cover;
+    background-position: center;
+    overflow: hidden; /* Hide the overflowing number */
+}
+
+.hero-number-bg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 15rem;
+    font-weight: 100;
+    color: rgba(255, 255, 255, 0.2);
+    z-index: 0;
+    font-family: 'Arial', sans-serif;
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    font-weight: 300;
+    line-height: 1.2;
+    z-index: 1;
+    position: relative;
+}
+
+.hero-subtitle {
+    font-size: 1.2rem;
+    font-weight: 300;
+    max-width: 600px;
+    margin: 0 auto;
+    opacity: 0.9;
+    z-index: 1;
+    position: relative;
+}
+
+.cta-button {
+    background-color: var(--sc-blue);
+    color: white;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.3s ease;
+    z-index: 1;
+    position: relative;
+}
+
+.cta-button:hover {
+    background-color: #0052a3; /* A slightly darker blue for hover effect */
+}
+
