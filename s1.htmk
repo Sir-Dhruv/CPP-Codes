@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Standard Chartered - From here, possibilities are everywhere</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .top-banner {
+            background-color: #333;
+            color: white;
+            font-size: 12px;
+            padding: 5px 0;
+        }
+        
+        .top-banner a {
+            color: white;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+        
+        .top-banner a:hover {
+            text-decoration: underline;
+        }
+        
+        .navbar {
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 15px 0;
+        }
+        
+        .navbar-brand img {
+            height: 40px;
+        }
+        
+        .navbar-nav .nav-link {
+            color: #333;
+            font-weight: 500;
+            margin: 0 15px;
+            font-size: 14px;
+        }
+        
+        .navbar-nav .nav-link:hover {
+            color: #0066cc;
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, rgba(0,0,0,0.7), rgba(0,0,0,0.5)), 
+                        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><defs><linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%23001f3f;stop-opacity:1" /><stop offset="50%" style="stop-color:%23003366;stop-opacity:1" /><stop offset="100%" style="stop-color:%23004080;stop-opacity:1" /></linearGradient></defs><rect width="100%" height="100%" fill="url(%23bg)"/><circle cx="200" cy="600" r="80" fill="%23ffffff" opacity="0.05"/><circle cx="400" cy="200" r="60" fill="%23ffffff" opacity="0.03"/><circle cx="800" cy="400" r="100" fill="%23ffffff" opacity="0.04"/><circle cx="1000" cy="600" r="70" fill="%2300cc66" opacity="0.1"/><circle cx="600" cy="100" r="40" fill="%230066cc" opacity="0.1"/></svg>');
+            background-size: cover;
+            background-position: center;
+            min-height: 70vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(0, 102, 204, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(0, 204, 102, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 300;
+            color: white;
+            margin-bottom: 30px;
+            line-height: 1.2;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 40px;
+            max-width: 600px;
+        }
+        
+        .btn-learn-more {
+            background-color: #0066cc;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-learn-more:hover {
+            background-color: #0052a3;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .btn-learn-more i {
+            margin-left: 10px;
+        }
+        
+        .year-overlay {
+            position: absolute;
+            font-size: 15rem;
+            font-weight: 100;
+            color: rgba(255, 255, 255, 0.05);
+            z-index: 1;
+            right: 10%;
+            top: 50%;
+            transform: translateY(-50%);
+            line-height: 1;
+        }
+        
+        .floating-elements {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+        
+        .floating-circle {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.1;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .floating-circle.blue {
+            background-color: #0066cc;
+            width: 60px;
+            height: 60px;
+            top: 20%;
+            left: 15%;
+            animation-delay: 0s;
+        }
+        
+        .floating-circle.green {
+            background-color: #00cc66;
+            width: 40px;
+            height: 40px;
+            top: 60%;
+            right: 20%;
+            animation-delay: 2s;
+        }
+        
+        .floating-circle.white {
+            background-color: white;
+            width: 30px;
+            height: 30px;
+            top: 30%;
+            right: 30%;
+            animation-delay: 4s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .sustainability-icon {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            width: 50px;
+            height: 50px;
+            background-color: #00cc66;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3;
+        }
+        
+        .sustainability-icon i {
+            color: white;
+            font-size: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            
+            .year-overlay {
+                font-size: 8rem;
+                right: 5%;
+            }
+            
+            .top-banner {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Banner -->
+    <div class="top-banner">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 text-end">
+                    <a href="#" class="me-3">Online banking</a>
+                    <span class="me-3">|</span>
+                    <a href="#" class="me-3">Private banking online</a>
+                    <span class="me-3">|</span>
+                    <a href="#" class="me-3">StraightBanK</a>
+                    <span class="me-3">|</span>
+                    <a href="#" class="me-3">Local sites</a>
+                    <span class="me-3">|</span>
+                    <a href="#">Contact us</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <svg width="160" height="40" viewBox="0 0 160 40">
+                    <defs>
+                        <linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" style="stop-color:#0066cc;stop-opacity:1" />
+                            <stop offset="50%" style="stop-color:#00cc66;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#0066cc;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M5 15 L15 5 L15 35 L5 25 Z" fill="url(#logo-gradient)"/>
+                    <path d="M15 15 L25 5 L25 35 L15 25 Z" fill="url(#logo-gradient)" opacity="0.8"/>
+                    <text x="35" y="15" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#333">standard</text>
+                    <text x="35" y="28" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#333">chartered</text>
+                </svg>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">About us</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Corporate & Investment</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Wealth & Retail</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Ventures</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Investors</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Insights</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Media</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Careers</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-search"></i></a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="hero-content">
+                        <h1 class="hero-title">
+                            <i class="fas fa-circle text-primary me-3" style="font-size: 0.3em;"></i>
+                            From here, possibilities are 
+                            everywhere 
+                            <i class="fas fa-circle text-success ms-3" style="font-size: 0.3em;"></i>
+                        </h1>
+                        <p class="hero-subtitle">
+                            We're here to connect your potential to possibilities in the world's most dynamic markets.
+                        </p>
+                        <a href="#" class="btn-learn-more">
+                            Learn how <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Year Overlay -->
+        <div class="year-overlay">2025</div>
+        
+        <!-- Floating Elements -->
+        <div class="floating-elements">
+            <div class="floating-circle blue"></div>
+            <div class="floating-circle green"></div>
+            <div class="floating-circle white"></div>
+        </div>
+        
+        <!-- Sustainability Icon -->
+        <div class="sustainability-icon">
+            <i class="fas fa-leaf"></i>
+        </div>
+    </section>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
