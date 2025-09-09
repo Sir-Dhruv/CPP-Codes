@@ -1,0 +1,221 @@
+import React, { useState } from "react";
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Container,
+  TextField,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Button,
+  Box,
+  Chip,
+  Divider,
+} from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+
+// Helper: Get required approvals based on amount
+const getRequiredApprovals = (amount) => {
+  if (amount > 1000000) return 3;
+  if (amount > 100000) return 2;
+  return 1;
+};
+
+// Status calculation
+const getBatchStatus = (approvals, required) => {
+  if (approvals === 0) return "Pending";
+  if (approvals < required) return "Partial";
+  return "Completed";
+};
+
+const PayrollApproval = () => {
+  const [filter, setFilter] = useState("");
+  const [batches, setBatches] = useState([
+    {
+      id: "BATCH001",
+      date: "2025-09-09",
+      amount: 1200000,
+      approvals: 0,
+      rejected: false,
+      remarks: "",
+      timestamp: null,
+    },
+    {
+      id: "BATCH002",
+      date: "2025-09-08",
+      amount: 250000,
+      approvals: 1,
+      rejected: false,
+      remarks: "",
+      timestamp: null,
+    },
+    {
+      id: "BATCH003",
+      date: "2025-09-07",
+      amount: 75000,
+      approvals: 0,
+      rejected: false,
+      remarks: "",
+      timestamp: null,
+    },
+  ]);
+
+  const handleApprove = (batchId) => {
+    setBatches((prev) =>
+      prev.map((batch) => {
+        if (batch.id === batchId) {
+          const required = getRequiredApprovals(batch.amount);
+          if (batch.approvals < required) {
+            return {
+              ...batch,
+              approvals: batch.approvals + 1,
+              timestamp: new Date().toLocaleString(),
+            };
+          }
+        }
+        return batch;
+      })
+    );
+  };
+
+  const handleReject = (batchId, remarks) => {
+    setBatches((prev) =>
+      prev.map((batch) =>
+        batch.id === batchId
+          ? {
+              ...batch,
+              rejected: true,
+              remarks,
+              timestamp: new Date().toLocaleString(),
+            }
+          : batch
+      )
+    );
+  };
+
+  const filteredBatches = batches.filter(
+    (batch) =>
+      batch.id.toLowerCase().includes(filter.toLowerCase()) ||
+      batch.date.includes(filter)
+  );
+
+  return (
+    <div>
+      {/* Navbar */}
+      <AppBar position="static">
+        <Toolbar>
+          <Typography variant="h6">Payroll Approval</Typography>
+        </Toolbar>
+      </AppBar>
+
+      <Container sx={{ mt: 3 }}>
+        {/* Filter */}
+        <TextField
+          fullWidth
+          label="Filter Batch (by ID or Date)"
+          variant="outlined"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          sx={{ mb: 3 }}
+        />
+
+        {/* Batch List */}
+        {filteredBatches.map((batch) => {
+          const required = getRequiredApprovals(batch.amount);
+          const status = batch.rejected
+            ? "Rejected"
+            : getBatchStatus(batch.approvals, required);
+
+          return (
+            <Accordion key={batch.id}>
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  width="100%"
+                  alignItems="center"
+                >
+                  <Typography>
+                    {batch.id} | Amount: ₹{batch.amount.toLocaleString()} | Date:{" "}
+                    {batch.date}
+                  </Typography>
+                  <Chip
+                    label={status}
+                    color={
+                      status === "Completed"
+                        ? "success"
+                        : status === "Partial"
+                        ? "warning"
+                        : status === "Rejected"
+                        ? "error"
+                        : "default"
+                    }
+                  />
+                </Box>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Typography>
+                  Required Approvals: {required} | Current Approvals:{" "}
+                  {batch.approvals}
+                </Typography>
+
+                <Divider sx={{ my: 2 }} />
+
+                {!batch.rejected && status !== "Completed" && (
+                  <Box display="flex" gap={2}>
+                    <Button
+                      variant="contained"
+                      color="success"
+                      onClick={() => handleApprove(batch.id)}
+                    >
+                      Approve
+                    </Button>
+                    <RejectWithRemarks batch={batch} onReject={handleReject} />
+                  </Box>
+                )}
+
+                {batch.rejected && (
+                  <Typography color="error">
+                    Remarks: {batch.remarks}
+                  </Typography>
+                )}
+
+                {batch.timestamp && (
+                  <Typography variant="caption" display="block" sx={{ mt: 2 }}>
+                    Last Action Time: {batch.timestamp}
+                  </Typography>
+                )}
+              </AccordionDetails>
+            </Accordion>
+          );
+        })}
+      </Container>
+    </div>
+  );
+};
+
+// Reject with remarks sub-component
+const RejectWithRemarks = ({ batch, onReject }) => {
+  const [remarks, setRemarks] = useState("");
+
+  return (
+    <Box display="flex" gap={2} alignItems="center">
+      <TextField
+        label="Remarks"
+        size="small"
+        value={remarks}
+        onChange={(e) => setRemarks(e.target.value)}
+      />
+      <Button
+        variant="contained"
+        color="error"
+        onClick={() => onReject(batch.id, remarks)}
+      >
+        Reject
+      </Button>
+    </Box>
+  );
+};
+
+export default PayrollApproval;
