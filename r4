@@ -1,0 +1,263 @@
+import React, { useState } from "react";
+import {
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Typography,
+  TextField,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Chip,
+  Paper,
+} from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { format } from "date-fns";
+
+const PayrollApprovalSystem = () => {
+  const [batches, setBatches] = useState([
+    {
+      id: "BATCH001",
+      date: "2025-09-01",
+      totalAmount: 50000,
+      payments: [{ id: "P001", employee: "Alice", amount: 50000 }],
+      approvers: [
+        { id: "A1", name: "Bob", status: "Pending", remarks: "", dateTime: null },
+      ],
+    },
+    {
+      id: "BATCH002",
+      date: "2025-09-02",
+      totalAmount: 150000,
+      payments: [
+        { id: "P002", employee: "Charlie", amount: 100000 },
+        { id: "P003", employee: "David", amount: 50000 },
+      ],
+      approvers: [
+        { id: "A1", name: "Bob", status: "Pending", remarks: "", dateTime: null },
+        { id: "A2", name: "Emma", status: "Pending", remarks: "", dateTime: null },
+      ],
+    },
+    {
+      id: "BATCH003",
+      date: "2025-09-03",
+      totalAmount: 1200000,
+      payments: [
+        { id: "P004", employee: "Frank", amount: 600000 },
+        { id: "P005", employee: "Grace", amount: 600000 },
+      ],
+      approvers: [
+        { id: "A1", name: "Bob", status: "Pending", remarks: "", dateTime: null },
+        { id: "A2", name: "Hannah", status: "Pending", remarks: "", dateTime: null },
+        { id: "A3", name: "Ian", status: "Pending", remarks: "", dateTime: null },
+      ],
+    },
+    {
+      id: "BATCH004",
+      date: "2025-09-04",
+      totalAmount: 250000,
+      payments: [{ id: "P006", employee: "Jack", amount: 250000 }],
+      approvers: [
+        { id: "A1", name: "Bob", status: "Approved", remarks: "Looks good", dateTime: new Date("2025-09-04T10:30:00") },
+      ],
+    },
+    {
+      id: "BATCH005",
+      date: "2025-09-05",
+      totalAmount: 80000,
+      payments: [{ id: "P007", employee: "Karen", amount: 80000 }],
+      approvers: [
+        { id: "A1", name: "Bob", status: "Rejected", remarks: "Discrepancy in amount", dateTime: new Date("2025-09-05T11:45:00") },
+      ],
+    },
+  ]);
+
+  const [openDialog, setOpenDialog] = useState(false);
+  const [selectedBatch, setSelectedBatch] = useState(null);
+  const [remarks, setRemarks] = useState("");
+  const [filter, setFilter] = useState("");
+
+  const handleOpenDialog = (batch) => {
+    setSelectedBatch(batch);
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setRemarks("");
+  };
+
+  const handleApproval = (status) => {
+    if (selectedBatch) {
+      const updatedBatches = batches.map((batch) => {
+        if (batch.id === selectedBatch.id) {
+          const updatedApprovers = batch.approvers.map((approver) => {
+            if (approver.name === "Bob") {
+              return {
+                ...approver,
+                status,
+                remarks,
+                dateTime: new Date(),
+              };
+            }
+            return approver;
+          });
+          return { ...batch, approvers: updatedApprovers };
+        }
+        return batch;
+      });
+      setBatches(updatedBatches);
+    }
+    handleCloseDialog();
+  };
+
+  const filteredBatches = batches.filter(
+    (batch) =>
+      batch.id.toLowerCase().includes(filter.toLowerCase()) ||
+      batch.date.includes(filter)
+  );
+
+  const formatDateTime = (date) => {
+    return date ? format(new Date(date), "dd MMM yyyy, hh:mm a") : "";
+  };
+
+  return (
+    <Paper style={{ padding: 20, backgroundColor: "#f5faff" }}>
+      <Typography variant="h4" gutterBottom color="primary" align="center">
+        Payroll Approval System
+      </Typography>
+
+      <TextField
+        label="Filter by Batch ID or Date"
+        variant="outlined"
+        fullWidth
+        margin="normal"
+        value={filter}
+        onChange={(e) => setFilter(e.target.value)}
+      />
+
+      {filteredBatches.map((batch) => (
+        <Accordion key={batch.id}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography color="primary" variant="h6">
+              {batch.id} - {batch.date} (₹{batch.totalAmount.toLocaleString()})
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Typography variant="subtitle1">Payments</Typography>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Payment ID</TableCell>
+                  <TableCell>Employee</TableCell>
+                  <TableCell>Amount</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {batch.payments.map((payment) => (
+                  <TableRow key={payment.id}>
+                    <TableCell>{payment.id}</TableCell>
+                    <TableCell>{payment.employee}</TableCell>
+                    <TableCell>₹{payment.amount.toLocaleString()}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+
+            <Typography variant="subtitle1" style={{ marginTop: 16 }}>
+              Approval History
+            </Typography>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Approver</TableCell>
+                  <TableCell>Status / Remarks</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {batch.approvers.map((approver) => (
+                  <TableRow
+                    key={approver.id}
+                    style={{
+                      backgroundColor:
+                        approver.status === "Rejected"
+                          ? "#ffe5e5"
+                          : approver.status === "Approved"
+                          ? "#e5ffe5"
+                          : "inherit",
+                    }}
+                  >
+                    <TableCell>{approver.name}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={approver.status}
+                        color={
+                          approver.status === "Approved"
+                            ? "success"
+                            : approver.status === "Rejected"
+                            ? "error"
+                            : "default"
+                        }
+                        size="small"
+                      />
+                      {approver.dateTime && (
+                        <div style={{ fontSize: "0.8rem", marginTop: 4 }}>
+                          {formatDateTime(approver.dateTime)}
+                        </div>
+                      )}
+                      {approver.remarks && (
+                        <div style={{ fontSize: "0.8rem", marginTop: 2 }}>
+                          Remark: {approver.remarks}
+                        </div>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+
+            <Button
+              variant="contained"
+              color="primary"
+              style={{ marginTop: 16 }}
+              onClick={() => handleOpenDialog(batch)}
+            >
+              Take Action (Bob only)
+            </Button>
+          </AccordionDetails>
+        </Accordion>
+      ))}
+
+      <Dialog open={openDialog} onClose={handleCloseDialog}>
+        <DialogTitle>Approval Action</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Remarks"
+            variant="outlined"
+            fullWidth
+            margin="normal"
+            value={remarks}
+            onChange={(e) => setRemarks(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => handleApproval("Rejected")} color="error">
+            Reject
+          </Button>
+          <Button onClick={() => handleApproval("Approved")} color="primary">
+            Approve
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Paper>
+  );
+};
+
+export default PayrollApprovalSystem;
