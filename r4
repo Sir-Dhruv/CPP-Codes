@@ -19,7 +19,6 @@ import {
   Paper,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { format } from "date-fns";
 
 const PayrollApprovalSystem = () => {
   const [batches, setBatches] = useState([
@@ -29,7 +28,7 @@ const PayrollApprovalSystem = () => {
       totalAmount: 50000,
       payments: [{ id: "P001", employee: "Alice", amount: 50000 }],
       approvers: [
-        { id: "A1", name: "Bob", status: "Pending", remarks: "", dateTime: null },
+        { id: "A1", name: "Bob", status: "Pending", remarks: "" },
       ],
     },
     {
@@ -41,8 +40,8 @@ const PayrollApprovalSystem = () => {
         { id: "P003", employee: "David", amount: 50000 },
       ],
       approvers: [
-        { id: "A1", name: "Bob", status: "Pending", remarks: "", dateTime: null },
-        { id: "A2", name: "Emma", status: "Pending", remarks: "", dateTime: null },
+        { id: "A1", name: "Bob", status: "Pending", remarks: "" },
+        { id: "A2", name: "Emma", status: "Pending", remarks: "" },
       ],
     },
     {
@@ -54,9 +53,9 @@ const PayrollApprovalSystem = () => {
         { id: "P005", employee: "Grace", amount: 600000 },
       ],
       approvers: [
-        { id: "A1", name: "Bob", status: "Pending", remarks: "", dateTime: null },
-        { id: "A2", name: "Hannah", status: "Pending", remarks: "", dateTime: null },
-        { id: "A3", name: "Ian", status: "Pending", remarks: "", dateTime: null },
+        { id: "A1", name: "Bob", status: "Pending", remarks: "" },
+        { id: "A2", name: "Hannah", status: "Pending", remarks: "" },
+        { id: "A3", name: "Ian", status: "Pending", remarks: "" },
       ],
     },
     {
@@ -65,7 +64,7 @@ const PayrollApprovalSystem = () => {
       totalAmount: 250000,
       payments: [{ id: "P006", employee: "Jack", amount: 250000 }],
       approvers: [
-        { id: "A1", name: "Bob", status: "Approved", remarks: "Looks good", dateTime: new Date("2025-09-04T10:30:00") },
+        { id: "A1", name: "Bob", status: "Approved", remarks: "Looks good" },
       ],
     },
     {
@@ -74,7 +73,7 @@ const PayrollApprovalSystem = () => {
       totalAmount: 80000,
       payments: [{ id: "P007", employee: "Karen", amount: 80000 }],
       approvers: [
-        { id: "A1", name: "Bob", status: "Rejected", remarks: "Discrepancy in amount", dateTime: new Date("2025-09-05T11:45:00") },
+        { id: "A1", name: "Bob", status: "Rejected", remarks: "Discrepancy in amount" },
       ],
     },
   ]);
@@ -104,7 +103,6 @@ const PayrollApprovalSystem = () => {
                 ...approver,
                 status,
                 remarks,
-                dateTime: new Date(),
               };
             }
             return approver;
@@ -123,10 +121,6 @@ const PayrollApprovalSystem = () => {
       batch.id.toLowerCase().includes(filter.toLowerCase()) ||
       batch.date.includes(filter)
   );
-
-  const formatDateTime = (date) => {
-    return date ? format(new Date(date), "dd MMM yyyy, hh:mm a") : "";
-  };
 
   return (
     <Paper style={{ padding: 20, backgroundColor: "#f5faff" }}>
@@ -207,13 +201,8 @@ const PayrollApprovalSystem = () => {
                         }
                         size="small"
                       />
-                      {approver.dateTime && (
-                        <div style={{ fontSize: "0.8rem", marginTop: 4 }}>
-                          {formatDateTime(approver.dateTime)}
-                        </div>
-                      )}
                       {approver.remarks && (
-                        <div style={{ fontSize: "0.8rem", marginTop: 2 }}>
+                        <div style={{ fontSize: "0.8rem", marginTop: 4 }}>
                           Remark: {approver.remarks}
                         </div>
                       )}
