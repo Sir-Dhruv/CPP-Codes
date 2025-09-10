@@ -27,9 +27,7 @@ const PayrollApprovalSystem = () => {
       date: "2025-09-01",
       totalAmount: 50000,
       payments: [{ id: "P001", employee: "Alice", amount: 50000 }],
-      approvers: [
-        { id: "A1", name: "Bob", status: "Pending", remarks: "" },
-      ],
+      approvers: [{ id: "A1", name: "Bob", status: "Pending", remarks: "" }],
     },
     {
       id: "BATCH002",
@@ -73,7 +71,12 @@ const PayrollApprovalSystem = () => {
       totalAmount: 80000,
       payments: [{ id: "P007", employee: "Karen", amount: 80000 }],
       approvers: [
-        { id: "A1", name: "Bob", status: "Rejected", remarks: "Discrepancy in amount" },
+        {
+          id: "A1",
+          name: "Bob",
+          status: "Rejected",
+          remarks: "Discrepancy in amount",
+        },
       ],
     },
   ]);
@@ -122,6 +125,14 @@ const PayrollApprovalSystem = () => {
       batch.date.includes(filter)
   );
 
+  // Function to calculate batch status
+  const getBatchStatus = (approvers) => {
+    if (approvers.some((a) => a.status === "Rejected")) return "Rejected";
+    if (approvers.every((a) => a.status === "Approved")) return "Fully Approved";
+    if (approvers.some((a) => a.status === "Approved")) return "Partially Approved";
+    return "Pending";
+  };
+
   return (
     <Paper style={{ padding: 20, backgroundColor: "#f5faff" }}>
       <Typography variant="h4" gutterBottom color="primary" align="center">
@@ -137,92 +148,114 @@ const PayrollApprovalSystem = () => {
         onChange={(e) => setFilter(e.target.value)}
       />
 
-      {filteredBatches.map((batch) => (
-        <Accordion key={batch.id}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography color="primary" variant="h6">
-              {batch.id} - {batch.date} (₹{batch.totalAmount.toLocaleString()})
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Typography variant="subtitle1">Payments</Typography>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Payment ID</TableCell>
-                  <TableCell>Employee</TableCell>
-                  <TableCell>Amount</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {batch.payments.map((payment) => (
-                  <TableRow key={payment.id}>
-                    <TableCell>{payment.id}</TableCell>
-                    <TableCell>{payment.employee}</TableCell>
-                    <TableCell>₹{payment.amount.toLocaleString()}</TableCell>
+      {filteredBatches.map((batch) => {
+        const batchStatus = getBatchStatus(batch.approvers);
+        const bob = batch.approvers.find((a) => a.name === "Bob");
+        return (
+          <Accordion key={batch.id}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography color="primary" variant="h6">
+                {batch.id} - {batch.date} (₹{batch.totalAmount.toLocaleString()}){" "}
+                <Chip
+                  label={batchStatus}
+                  color={
+                    batchStatus === "Fully Approved"
+                      ? "success"
+                      : batchStatus === "Rejected"
+                      ? "error"
+                      : batchStatus === "Partially Approved"
+                      ? "warning"
+                      : "default"
+                  }
+                  size="small"
+                  style={{ marginLeft: 10 }}
+                />
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Typography variant="subtitle1">Payments</Typography>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Payment ID</TableCell>
+                    <TableCell>Employee</TableCell>
+                    <TableCell>Amount</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHead>
+                <TableBody>
+                  {batch.payments.map((payment) => (
+                    <TableRow key={payment.id}>
+                      <TableCell>{payment.id}</TableCell>
+                      <TableCell>{payment.employee}</TableCell>
+                      <TableCell>
+                        ₹{payment.amount.toLocaleString()}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
 
-            <Typography variant="subtitle1" style={{ marginTop: 16 }}>
-              Approval History
-            </Typography>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Approver</TableCell>
-                  <TableCell>Status / Remarks</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {batch.approvers.map((approver) => (
-                  <TableRow
-                    key={approver.id}
-                    style={{
-                      backgroundColor:
-                        approver.status === "Rejected"
-                          ? "#ffe5e5"
-                          : approver.status === "Approved"
-                          ? "#e5ffe5"
-                          : "inherit",
-                    }}
-                  >
-                    <TableCell>{approver.name}</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={approver.status}
-                        color={
-                          approver.status === "Approved"
-                            ? "success"
-                            : approver.status === "Rejected"
-                            ? "error"
-                            : "default"
-                        }
-                        size="small"
-                      />
-                      {approver.remarks && (
-                        <div style={{ fontSize: "0.8rem", marginTop: 4 }}>
-                          Remark: {approver.remarks}
-                        </div>
-                      )}
-                    </TableCell>
+              <Typography variant="subtitle1" style={{ marginTop: 16 }}>
+                Approval History
+              </Typography>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Approver</TableCell>
+                    <TableCell>Status / Remarks</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHead>
+                <TableBody>
+                  {batch.approvers.map((approver) => (
+                    <TableRow
+                      key={approver.id}
+                      style={{
+                        backgroundColor:
+                          approver.status === "Rejected"
+                            ? "#ffe5e5"
+                            : approver.status === "Approved"
+                            ? "#e5ffe5"
+                            : "inherit",
+                      }}
+                    >
+                      <TableCell>{approver.name}</TableCell>
+                      <TableCell>
+                        <Chip
+                          label={approver.status}
+                          color={
+                            approver.status === "Approved"
+                              ? "success"
+                              : approver.status === "Rejected"
+                              ? "error"
+                              : "default"
+                          }
+                          size="small"
+                        />
+                        {approver.remarks && (
+                          <div style={{ fontSize: "0.8rem", marginTop: 4 }}>
+                            Remark: {approver.remarks}
+                          </div>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
 
-            <Button
-              variant="contained"
-              color="primary"
-              style={{ marginTop: 16 }}
-              onClick={() => handleOpenDialog(batch)}
-            >
-              Take Action (Bob only)
-            </Button>
-          </AccordionDetails>
-        </Accordion>
-      ))}
+              {bob && bob.status === "Pending" && (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  style={{ marginTop: 16 }}
+                  onClick={() => handleOpenDialog(batch)}
+                >
+                  Take Action
+                </Button>
+              )}
+            </AccordionDetails>
+          </Accordion>
+        );
+      })}
 
       <Dialog open={openDialog} onClose={handleCloseDialog}>
         <DialogTitle>Approval Action</DialogTitle>
