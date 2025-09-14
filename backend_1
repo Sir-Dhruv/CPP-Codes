@@ -1,0 +1,561 @@
+// pom.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.0</version>
+        <relativePath/>
+    </parent>
+    <groupId>com.example</groupId>
+    <artifactId>payroll-approval-system</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>payroll-approval-system</name>
+    <description>Payroll Approval System Backend</description>
+    <properties>
+        <java.version>17</java.version>
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+
+// application.yml
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:payrolldb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+  h2:
+    console:
+      enabled: true
+
+// PayrollApprovalSystemApplication.java
+package com.example.payrollapproval;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class PayrollApprovalSystemApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(PayrollApprovalSystemApplication.class, args);
+    }
+}
+
+// Entity Classes
+
+// PayrollBatch.java
+package com.example.payrollapproval.entity;
+
+import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+
+@Entity
+@Table(name = "payroll_batches")
+public class PayrollBatch {
+    @Id
+    private String id;
+    
+    @Column(nullable = false)
+    private LocalDate date;
+    
+    @Column(name = "total_amount", nullable = false)
+    private BigDecimal totalAmount;
+    
+    @OneToMany(mappedBy = "batch", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Payment> payments;
+    
+    @OneToMany(mappedBy = "batch", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Approver> approvers;
+    
+    // Constructors
+    public PayrollBatch() {}
+    
+    public PayrollBatch(String id, LocalDate date, BigDecimal totalAmount) {
+        this.id = id;
+        this.date = date;
+        this.totalAmount = totalAmount;
+    }
+    
+    // Getters and Setters
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+    
+    public LocalDate getDate() { return date; }
+    public void setDate(LocalDate date) { this.date = date; }
+    
+    public BigDecimal getTotalAmount() { return totalAmount; }
+    public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
+    
+    public List<Payment> getPayments() { return payments; }
+    public void setPayments(List<Payment> payments) { this.payments = payments; }
+    
+    public List<Approver> getApprovers() { return approvers; }
+    public void setApprovers(List<Approver> approvers) { this.approvers = approvers; }
+}
+
+// Payment.java
+package com.example.payrollapproval.entity;
+
+import jakarta.persistence.*;
+import java.math.BigDecimal;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+@Entity
+@Table(name = "payments")
+public class Payment {
+    @Id
+    private String id;
+    
+    @Column(nullable = false)
+    private String employee;
+    
+    @Column(nullable = false)
+    private BigDecimal amount;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "batch_id")
+    @JsonIgnore
+    private PayrollBatch batch;
+    
+    // Constructors
+    public Payment() {}
+    
+    public Payment(String id, String employee, BigDecimal amount, PayrollBatch batch) {
+        this.id = id;
+        this.employee = employee;
+        this.amount = amount;
+        this.batch = batch;
+    }
+    
+    // Getters and Setters
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+    
+    public String getEmployee() { return employee; }
+    public void setEmployee(String employee) { this.employee = employee; }
+    
+    public BigDecimal getAmount() { return amount; }
+    public void setAmount(BigDecimal amount) { this.amount = amount; }
+    
+    public PayrollBatch getBatch() { return batch; }
+    public void setBatch(PayrollBatch batch) { this.batch = batch; }
+}
+
+// Approver.java
+package com.example.payrollapproval.entity;
+
+import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+@Entity
+@Table(name = "approvers")
+public class Approver {
+    @Id
+    private String id;
+    
+    @Column(nullable = false)
+    private String name;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ApprovalStatus status;
+    
+    private String remarks;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "batch_id")
+    @JsonIgnore
+    private PayrollBatch batch;
+    
+    // Constructors
+    public Approver() {}
+    
+    public Approver(String id, String name, ApprovalStatus status, String remarks, PayrollBatch batch) {
+        this.id = id;
+        this.name = name;
+        this.status = status;
+        this.remarks = remarks;
+        this.batch = batch;
+    }
+    
+    // Getters and Setters
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+    
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    
+    public ApprovalStatus getStatus() { return status; }
+    public void setStatus(ApprovalStatus status) { this.status = status; }
+    
+    public String getRemarks() { return remarks; }
+    public void setRemarks(String remarks) { this.remarks = remarks; }
+    
+    public PayrollBatch getBatch() { return batch; }
+    public void setBatch(PayrollBatch batch) { this.batch = batch; }
+}
+
+// ApprovalStatus.java
+package com.example.payrollapproval.entity;
+
+public enum ApprovalStatus {
+    PENDING("Pending"),
+    APPROVED("Approved"),
+    REJECTED("Rejected");
+    
+    private final String displayName;
+    
+    ApprovalStatus(String displayName) {
+        this.displayName = displayName;
+    }
+    
+    public String getDisplayName() {
+        return displayName;
+    }
+}
+
+// Repository Interfaces
+
+// PayrollBatchRepository.java
+package com.example.payrollapproval.repository;
+
+import com.example.payrollapproval.entity.PayrollBatch;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+import java.util.List;
+
+@Repository
+public interface PayrollBatchRepository extends JpaRepository<PayrollBatch, String> {
+    
+    @Query("SELECT DISTINCT b FROM PayrollBatch b " +
+           "LEFT JOIN FETCH b.payments p " +
+           "LEFT JOIN FETCH b.approvers a " +
+           "WHERE (:filter IS NULL OR :filter = '' OR " +
+           "LOWER(b.id) LIKE LOWER(CONCAT('%', :filter, '%')) OR " +
+           "CAST(b.date AS string) LIKE CONCAT('%', :filter, '%'))")
+    List<PayrollBatch> findBatchesWithFilter(@Param("filter") String filter);
+    
+    @Query("SELECT b FROM PayrollBatch b " +
+           "LEFT JOIN FETCH b.payments p " +
+           "LEFT JOIN FETCH b.approvers a " +
+           "WHERE b.id = :id")
+    PayrollBatch findByIdWithDetails(@Param("id") String id);
+}
+
+// ApproverRepository.java
+package com.example.payrollapproval.repository;
+
+import com.example.payrollapproval.entity.Approver;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface ApproverRepository extends JpaRepository<Approver, String> {
+    Approver findByBatchIdAndName(String batchId, String name);
+}
+
+// DTOs
+
+// ApprovalRequest.java
+package com.example.payrollapproval.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
+public class ApprovalRequest {
+    @NotNull
+    @NotBlank
+    private String batchId;
+    
+    @NotNull
+    @NotBlank
+    private String approverName;
+    
+    @NotNull
+    @NotBlank
+    private String status;
+    
+    private String remarks;
+    
+    // Constructors
+    public ApprovalRequest() {}
+    
+    public ApprovalRequest(String batchId, String approverName, String status, String remarks) {
+        this.batchId = batchId;
+        this.approverName = approverName;
+        this.status = status;
+        this.remarks = remarks;
+    }
+    
+    // Getters and Setters
+    public String getBatchId() { return batchId; }
+    public void setBatchId(String batchId) { this.batchId = batchId; }
+    
+    public String getApproverName() { return approverName; }
+    public void setApproverName(String approverName) { this.approverName = approverName; }
+    
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+    
+    public String getRemarks() { return remarks; }
+    public void setRemarks(String remarks) { this.remarks = remarks; }
+}
+
+// Service Layer
+
+// PayrollBatchService.java
+package com.example.payrollapproval.service;
+
+import com.example.payrollapproval.entity.*;
+import com.example.payrollapproval.repository.PayrollBatchRepository;
+import com.example.payrollapproval.repository.ApproverRepository;
+import com.example.payrollapproval.dto.ApprovalRequest;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
+
+@Service
+@Transactional
+public class PayrollBatchService {
+    
+    @Autowired
+    private PayrollBatchRepository batchRepository;
+    
+    @Autowired
+    private ApproverRepository approverRepository;
+    
+    public List<PayrollBatch> getAllBatches() {
+        return batchRepository.findBatchesWithFilter(null);
+    }
+    
+    public List<PayrollBatch> getBatchesWithFilter(String filter) {
+        return batchRepository.findBatchesWithFilter(filter);
+    }
+    
+    public PayrollBatch getBatchById(String id) {
+        return batchRepository.findByIdWithDetails(id);
+    }
+    
+    public PayrollBatch updateApproval(ApprovalRequest request) {
+        Approver approver = approverRepository.findByBatchIdAndName(
+            request.getBatchId(), 
+            request.getApproverName()
+        );
+        
+        if (approver == null) {
+            throw new RuntimeException("Approver not found");
+        }
+        
+        approver.setStatus(ApprovalStatus.valueOf(request.getStatus().toUpperCase()));
+        approver.setRemarks(request.getRemarks());
+        approverRepository.save(approver);
+        
+        return batchRepository.findByIdWithDetails(request.getBatchId());
+    }
+}
+
+// Controller
+
+// PayrollBatchController.java
+package com.example.payrollapproval.controller;
+
+import com.example.payrollapproval.entity.PayrollBatch;
+import com.example.payrollapproval.service.PayrollBatchService;
+import com.example.payrollapproval.dto.ApprovalRequest;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/payroll")
+@CrossOrigin(origins = "*")
+public class PayrollBatchController {
+    
+    @Autowired
+    private PayrollBatchService batchService;
+    
+    @GetMapping("/batches")
+    public ResponseEntity<List<PayrollBatch>> getAllBatches(
+            @RequestParam(required = false) String filter) {
+        List<PayrollBatch> batches;
+        if (filter != null && !filter.trim().isEmpty()) {
+            batches = batchService.getBatchesWithFilter(filter);
+        } else {
+            batches = batchService.getAllBatches();
+        }
+        return ResponseEntity.ok(batches);
+    }
+    
+    @GetMapping("/batches/{id}")
+    public ResponseEntity<PayrollBatch> getBatchById(@PathVariable String id) {
+        PayrollBatch batch = batchService.getBatchById(id);
+        if (batch == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(batch);
+    }
+    
+    @PostMapping("/approve")
+    public ResponseEntity<PayrollBatch> updateApproval(@Valid @RequestBody ApprovalRequest request) {
+        try {
+            PayrollBatch updatedBatch = batchService.updateApproval(request);
+            return ResponseEntity.ok(updatedBatch);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+}
+
+// Configuration for CORS and Exception Handling
+
+// GlobalExceptionHandler.java
+package com.example.payrollapproval.config;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import java.util.HashMap;
+import java.util.Map;
+
+@ControllerAdvice
+public class GlobalExceptionHandler {
+    
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, String>> handleValidationExceptions(
+            MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getFieldErrors().forEach((error) -> {
+            errors.put(error.getField(), error.getDefaultMessage());
+        });
+        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+    }
+    
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Map<String, String>> handleRuntimeException(RuntimeException ex) {
+        Map<String, String> error = new HashMap<>();
+        error.put("error", ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+}
+
+// Data Initialization
+
+// DataInitializer.java
+package com.example.payrollapproval.config;
+
+import com.example.payrollapproval.entity.*;
+import com.example.payrollapproval.repository.PayrollBatchRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.Arrays;
+
+@Component
+public class DataInitializer implements CommandLineRunner {
+    
+    @Autowired
+    private PayrollBatchRepository batchRepository;
+    
+    @Override
+    public void run(String... args) throws Exception {
+        initializeData();
+    }
+    
+    private void initializeData() {
+        // Batch 1
+        PayrollBatch batch1 = new PayrollBatch("BATCH001", LocalDate.of(2025, 9, 1), new BigDecimal("50000"));
+        Payment payment1 = new Payment("P001", "Alice", new BigDecimal("50000"), batch1);
+        Approver approver1 = new Approver("A1", "Bob", ApprovalStatus.PENDING, "", batch1);
+        batch1.setPayments(Arrays.asList(payment1));
+        batch1.setApprovers(Arrays.asList(approver1));
+        
+        // Batch 2
+        PayrollBatch batch2 = new PayrollBatch("BATCH002", LocalDate.of(2025, 9, 2), new BigDecimal("150000"));
+        Payment payment2 = new Payment("P002", "Charlie", new BigDecimal("100000"), batch2);
+        Payment payment3 = new Payment("P003", "David", new BigDecimal("50000"), batch2);
+        Approver approver2 = new Approver("A1", "Bob", ApprovalStatus.PENDING, "", batch2);
+        Approver approver3 = new Approver("A2", "Emma", ApprovalStatus.PENDING, "", batch2);
+        batch2.setPayments(Arrays.asList(payment2, payment3));
+        batch2.setApprovers(Arrays.asList(approver2, approver3));
+        
+        // Batch 3
+        PayrollBatch batch3 = new PayrollBatch("BATCH003", LocalDate.of(2025, 9, 3), new BigDecimal("1200000"));
+        Payment payment4 = new Payment("P004", "Frank", new BigDecimal("600000"), batch3);
+        Payment payment5 = new Payment("P005", "Grace", new BigDecimal("600000"), batch3);
+        Approver approver4 = new Approver("A1", "Bob", ApprovalStatus.PENDING, "", batch3);
+        Approver approver5 = new Approver("A2", "Hannah", ApprovalStatus.PENDING, "", batch3);
+        Approver approver6 = new Approver("A3", "Ian", ApprovalStatus.PENDING, "", batch3);
+        batch3.setPayments(Arrays.asList(payment4, payment5));
+        batch3.setApprovers(Arrays.asList(approver4, approver5, approver6));
+        
+        // Batch 4
+        PayrollBatch batch4 = new PayrollBatch("BATCH004", LocalDate.of(2025, 9, 4), new BigDecimal("250000"));
+        Payment payment6 = new Payment("P006", "Jack", new BigDecimal("250000"), batch4);
+        Approver approver7 = new Approver("A1", "Bob", ApprovalStatus.APPROVED, "Looks good", batch4);
+        batch4.setPayments(Arrays.asList(payment6));
+        batch4.setApprovers(Arrays.asList(approver7));
+        
+        // Batch 5
+        PayrollBatch batch5 = new PayrollBatch("BATCH005", LocalDate.of(2025, 9, 5), new BigDecimal("80000"));
+        Payment payment7 = new Payment("P007", "Karen", new BigDecimal("80000"), batch5);
+        Approver approver8 = new Approver("A1", "Bob", ApprovalStatus.REJECTED, "Discrepancy in amount", batch5);
+        batch5.setPayments(Arrays.asList(payment7));
+        batch5.setApprovers(Arrays.asList(approver8));
+        
+        // Save all batches
+        batchRepository.saveAll(Arrays.asList(batch1, batch2, batch3, batch4, batch5));
+    }
+}
