@@ -1,0 +1,43 @@
+package com.example.payroll.controller;
+
+import com.example.payroll.model.ApproverRemarks;
+import com.example.payroll.model.PayrollBatch;
+import com.example.payroll.model.User;
+import com.example.payroll.service.ApproverRemarksService;
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/approver-remarks")
+public class ApproverRemarksController {
+
+    private final ApproverRemarksService approverRemarksService;
+
+    public ApproverRemarksController(ApproverRemarksService approverRemarksService) {
+        this.approverRemarksService = approverRemarksService;
+    }
+
+    // Save remarks
+    @PostMapping
+    public ApproverRemarks saveRemarks(@RequestBody ApproverRemarks remarks) {
+        return approverRemarksService.saveRemarks(remarks);
+    }
+
+    // Get all remarks for a batch
+    @GetMapping("/batch/{batchId}")
+    public List<ApproverRemarks> getRemarksByBatch(@PathVariable Long batchId) {
+        PayrollBatch batch = new PayrollBatch();
+        batch.setBatchId(String.valueOf(batchId)); // assuming batchId is String in your PayrollBatch
+        return approverRemarksService.getRemarksByBatch(batch);
+    }
+
+    // Get all remarks by approver
+    @GetMapping("/approver/{approverId}")
+    public List<ApproverRemarks> getRemarksByApprover(@PathVariable Long approverId) {
+        User approver = new User();
+        approver.setId(approverId);
+        return approverRemarksService.getRemarksByApprover(approver);
+    }
+}
