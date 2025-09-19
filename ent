@@ -1,0 +1,74 @@
+package com.example.payroll.model;
+
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "approver_remarks")
+public class ApproverRemarks {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    // Approver (linked to Users table)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "approver_id", nullable = false)
+    private User approver;
+
+    // Remarks entered by the approver
+    @Column(name = "remarks", columnDefinition = "TEXT")
+    private String remarks;
+
+    // Action: APPROVE or REJECT
+    @Enumerated(EnumType.STRING)
+    @Column(name = "action", nullable = false)
+    private ApproverAction action;
+
+    // Link to PayrollBatch
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "batch_id", nullable = false)
+    private PayrollBatch payrollBatch;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    public ApproverRemarks() {}
+
+    public ApproverRemarks(User approver, String remarks, ApproverAction action, PayrollBatch payrollBatch) {
+        this.approver = approver;
+        this.remarks = remarks;
+        this.action = action;
+        this.payrollBatch = payrollBatch;
+    }
+
+    // Getters and Setters
+    public Long getId() { return id; }
+
+    public User getApprover() { return approver; }
+    public void setApprover(User approver) { this.approver = approver; }
+
+    public String getRemarks() { return remarks; }
+    public void setRemarks(String remarks) { this.remarks = remarks; }
+
+    public ApproverAction getAction() { return action; }
+    public void setAction(ApproverAction action) { this.action = action; }
+
+    public PayrollBatch getPayrollBatch() { return payrollBatch; }
+    public void setPayrollBatch(PayrollBatch payrollBatch) { this.payrollBatch = payrollBatch; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    @Override
+    public String toString() {
+        return "ApproverRemarks{" +
+                "id=" + id +
+                ", approver=" + (approver != null ? approver.getUsername() : null) +
+                ", remarks='" + remarks + '\'' +
+                ", action=" + action +
+                ", batchId=" + (payrollBatch != null ? payrollBatch.getBatchId() : null) +
+                ", createdAt=" + createdAt +
+                '}';
+    }
+}
