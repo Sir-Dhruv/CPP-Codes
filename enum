@@ -1,0 +1,6 @@
+package com.example.payroll.model;
+
+public enum ApproverAction {
+    APPROVE,
+    REJECT
+}
