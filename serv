@@ -1,0 +1,34 @@
+package com.example.payroll.service;
+
+import com.example.payroll.model.ApproverRemarks;
+import com.example.payroll.model.PayrollBatch;
+import com.example.payroll.model.User;
+import com.example.payroll.repository.ApproverRemarksRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class ApproverRemarksService {
+
+    private final ApproverRemarksRepository approverRemarksRepository;
+
+    public ApproverRemarksService(ApproverRemarksRepository approverRemarksRepository) {
+        this.approverRemarksRepository = approverRemarksRepository;
+    }
+
+    // Save remarks
+    public ApproverRemarks saveRemarks(ApproverRemarks remarks) {
+        return approverRemarksRepository.save(remarks);
+    }
+
+    // Get remarks for a batch
+    public List<ApproverRemarks> getRemarksByBatch(PayrollBatch batch) {
+        return approverRemarksRepository.findByPayrollBatch(batch);
+    }
+
+    // Get remarks by approver
+    public List<ApproverRemarks> getRemarksByApprover(User approver) {
+        return approverRemarksRepository.findByApprover(approver);
+    }
+}
