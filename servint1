@@ -1,0 +1,16 @@
+package com.example.payroll.service;
+
+import com.example.payroll.model.ApproverRemarks;
+import com.example.payroll.model.PayrollBatch;
+import com.example.payroll.model.User;
+
+import java.util.List;
+
+public interface ApproverRemarksService {
+
+    ApproverRemarks saveRemarks(ApproverRemarks remarks);
+
+    List<ApproverRemarks> getRemarksByBatch(PayrollBatch batch);
+
+    List<ApproverRemarks> getRemarksByApprover(User approver);
+}
