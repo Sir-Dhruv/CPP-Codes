@@ -1,0 +1,40 @@
+// ApproverRemarks.java
+@Entity
+@Table(name = "approver_remarks")
+public class ApproverRemarks {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "approver_name", nullable = false)
+    private String approverName;
+
+    @Column(name = "remarks", columnDefinition = "TEXT")
+    private String remarks;
+
+    @Column(name = "action", nullable = false) // APPROVE or REJECT
+    private String action;
+
+    @ManyToOne
+    @JoinColumn(name = "batch_id", nullable = false)
+    private PayrollBatch payrollBatch;
+
+    // getters and setters
+}
+
+
+
+// BatchApprovalCount.java
+@Entity
+@Table(name = "batch_approval_count")
+public class BatchApprovalCount {
+
+    @Id
+    private String batchId; // same as PayrollBatch.batchId
+
+    @Column(name = "approval_count", nullable = false)
+    private Integer approvalCount = 0;
+
+    // getters and setters
+}
