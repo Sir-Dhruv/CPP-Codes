@@ -1,0 +1,10 @@
+// ApproverRemarksRepository.java
+@Repository
+public interface ApproverRemarksRepository extends JpaRepository<ApproverRemarks, Long> {
+}
+
+
+// BatchApprovalCountRepository.java
+@Repository
+public interface BatchApprovalCountRepository extends JpaRepository<BatchApprovalCount, String> {
+}
