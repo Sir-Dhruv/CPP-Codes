@@ -1,0 +1,79 @@
+// ApprovalServiceImpl.java
+package com.example.payroll.service.impl;
+
+import com.example.payroll.entity.*;
+import com.example.payroll.repository.*;
+import com.example.payroll.service.ApprovalService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class ApprovalServiceImpl implements ApprovalService {
+
+    @Autowired
+    private PayrollBatchRepository payrollBatchRepo;
+
+    @Autowired
+    private BatchApprovalCountRepository batchApprovalCountRepo;
+
+    @Autowired
+    private ApproverRemarksRepository approverRemarksRepo;
+
+    @Override
+    public List<PayrollBatch> getAllBatches() {
+        return payrollBatchRepo.findAll();
+    }
+
+    @Override
+    public String approveBatch(String batchId, String approverName, String remarks) {
+        PayrollBatch batch = payrollBatchRepo.findById(batchId)
+                .orElseThrow(() -> new RuntimeException("Batch not found"));
+
+        BatchApprovalCount count = batchApprovalCountRepo.findById(batchId)
+                .orElse(new BatchApprovalCount());
+        count.setBatchId(batchId);
+        count.setApprovalCount(count.getApprovalCount() + 1);
+
+        // save remark
+        ApproverRemarks ar = new ApproverRemarks();
+        ar.setApproverName(approverName);
+        ar.setRemarks(remarks);
+        ar.setAction("APPROVE");
+        ar.setPayrollBatch(batch);
+        approverRemarksRepo.save(ar);
+
+        // update status
+        if (count.getApprovalCount().equals(batch.getRequiredApprovers())) {
+            batch.setStatus(BatchStatus.FULLY_APPROVED);
+        } else {
+            batch.setStatus(BatchStatus.PARTIALLY_APPROVED);
+        }
+
+        batchApprovalCountRepo.save(count);
+        payrollBatchRepo.save(batch);
+
+        return "Batch approved by " + approverName;
+    }
+
+    @Override
+    public String rejectBatch(String batchId, String approverName, String remarks) {
+        PayrollBatch batch = payrollBatchRepo.findById(batchId)
+                .orElseThrow(() -> new RuntimeException("Batch not found"));
+
+        // save remark
+        ApproverRemarks ar = new ApproverRemarks();
+        ar.setApproverName(approverName);
+        ar.setRemarks(remarks);
+        ar.setAction("REJECT");
+        ar.setPayrollBatch(batch);
+        approverRemarksRepo.save(ar);
+
+        // set rejected irrespective of count
+        batch.setStatus(BatchStatus.REJECTED);
+        payrollBatchRepo.save(batch);
+
+        return "Batch rejected by " + approverName;
+    }
+}
