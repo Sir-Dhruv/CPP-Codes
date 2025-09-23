@@ -1,0 +1,26 @@
+// ApprovalController.java
+@RestController
+@RequestMapping("/api/approvals")
+public class ApprovalController {
+
+    @Autowired
+    private ApprovalService approvalService;
+
+    @PostMapping("/approve/{batchId}")
+    public ResponseEntity<String> approveBatch(
+            @PathVariable String batchId,
+            @RequestParam String approverName,
+            @RequestParam String remarks) {
+        String msg = approvalService.approveBatch(batchId, approverName, remarks);
+        return ResponseEntity.ok(msg);
+    }
+
+    @PostMapping("/reject/{batchId}")
+    public ResponseEntity<String> rejectBatch(
+            @PathVariable String batchId,
+            @RequestParam String approverName,
+            @RequestParam String remarks) {
+        String msg = approvalService.rejectBatch(batchId, approverName, remarks);
+        return ResponseEntity.ok(msg);
+    }
+}
