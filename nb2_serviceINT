@@ -1,0 +1,17 @@
+// ApprovalService.java (interface)
+package com.example.payroll.service;
+
+import com.example.payroll.entity.PayrollBatch;
+import java.util.List;
+
+public interface ApprovalService {
+
+    // Fetch all payroll batches with approvers and payments
+    List<PayrollBatch> getAllBatches();
+
+    // Approve batch
+    String approveBatch(String batchId, String approverName, String remarks);
+
+    // Reject batch
+    String rejectBatch(String batchId, String approverName, String remarks);
+}
