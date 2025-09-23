@@ -284,3 +284,27 @@ public class ApproverRemarksController {
         return service.getRemarksByApprover(approverId);
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+package com.example.payroll.repository;
+
+import com.example.payroll.entity.ApproverRemarks;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface ApproverRemarksRepository extends JpaRepository<ApproverRemarks, Long> {
+
+    List<ApproverRemarks> findByBatchId(Long batchId);
+
+    boolean existsByBatchIdAndApproverId(Long batchId, Long approverId);
+}
