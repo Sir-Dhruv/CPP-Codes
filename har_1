@@ -1,0 +1,29 @@
+@Repository
+public interface TransactionDetailsRepository extends JpaRepository<PayrollTransaction, String> {
+
+    @Query(value = "SELECT "
+            + "t.transaction_id AS transactionId, "
+            + "t.transaction_date AS transactionDate, "
+            + "t.debit_account AS debitAccount, "
+            + "t.credit_account AS creditAccount, "
+            + "t.debit_currency AS debitCurrency, "
+            + "t.debit_amount AS debitAmount, "
+            + "t.credit_currency AS creditCurrency, "
+            + "t.employee_name AS employeeName, "
+            + "t.bank_id AS bankId, "
+            + "t.remarks AS remarks, "
+            + "b.batch_id AS batchId, "
+            + "b.created_by_user_id AS createdByUserId, "
+            + "b.status AS status, "
+            + "u.user_id AS userId, "
+            + "u.username AS username, "
+            + "a.id AS id, "
+            + "a.account_number AS accountNumber "
+            + "FROM payroll_transaction t "
+            + "JOIN payroll_batch b ON t.batch_id = b.batch_id "
+            + "JOIN users u ON b.created_by_user_id = u.user_id "
+            + "JOIN account a ON t.debit_account = a.account_number "
+            + "WHERE a.user_id = :userId",
+            nativeQuery = true)
+    List<TransactionDetailsDTO> findTransactionsForUserAccounts(@Param("userId") Long userId);
+}
