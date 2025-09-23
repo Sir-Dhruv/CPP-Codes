@@ -1,0 +1,286 @@
+package com.example.payroll.service;
+
+import com.example.payroll.entity.ApproverRemarks;
+
+import java.util.List;
+
+public interface ApprovalService {
+
+    void approveBatch(Long batchId, Long userId, String remarks);
+
+    void rejectBatch(Long batchId, Long userId, String remarks);
+
+    List<ApproverRemarks> getRemarksByBatch(Long batchId);
+
+    int getApprovalCount(Long batchId);
+}
+
+
+
+
+
+package com.example.payroll.service.impl;
+
+import com.example.payroll.entity.*;
+import com.example.payroll.enums.BatchStatus;
+import com.example.payroll.repository.*;
+import com.example.payroll.service.ApprovalService;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+public class ApprovalServiceImpl implements ApprovalService {
+
+    private final PayrollBatchRepository batchRepo;
+    private final UserRepository userRepo;
+    private final ApproverRemarksRepository remarksRepo;
+    private final ApprovalCountRepository countRepo;
+
+    public ApprovalServiceImpl(PayrollBatchRepository batchRepo,
+                               UserRepository userRepo,
+                               ApproverRemarksRepository remarksRepo,
+                               ApprovalCountRepository countRepo) {
+        this.batchRepo = batchRepo;
+        this.userRepo = userRepo;
+        this.remarksRepo = remarksRepo;
+        this.countRepo = countRepo;
+    }
+
+    @Override
+    @Transactional
+    public void approveBatch(Long batchId, Long userId, String remarks) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        PayrollBatch batch = batchRepo.findById(batchId)
+                .orElseThrow(() -> new RuntimeException("Batch not found"));
+
+        // ✅ Only roleId = 4 can approve
+        if (user.getRole() == null || user.getRole().getRoleId() != 4) {
+            throw new AccessDeniedException("Only approvers (roleId=4) can approve batches");
+        }
+
+        // ✅ Already finalized
+        if (batch.getStatus() == BatchStatus.FULLY_APPROVED || batch.getStatus() == BatchStatus.REJECTED) {
+            throw new IllegalStateException("Batch already finalized and cannot be changed");
+        }
+
+        // ✅ One approver only once
+        if (remarksRepo.existsByBatchIdAndApproverId(batchId, userId)) {
+            throw new IllegalStateException("This approver has already acted on the batch");
+        }
+
+        // Save remarks
+        ApproverRemarks remark = new ApproverRemarks(
+                user.getUsername(),
+                remarks,
+                "APPROVE",
+                batchId,
+                userId
+        );
+        remarksRepo.save(remark);
+
+        // Increment approval count
+        ApprovalCount approvalCount = countRepo.findByBatchId(batchId)
+                .orElse(new ApprovalCount(batchId, 0));
+        approvalCount.increment();
+        countRepo.save(approvalCount);
+
+        // Update status
+        if (approvalCount.getCount() >= batch.getRequiredApprovers()) {
+            batch.setStatus(BatchStatus.FULLY_APPROVED);
+        } else {
+            batch.setStatus(BatchStatus.PARTIALLY_APPROVED);
+        }
+
+        batchRepo.save(batch);
+    }
+
+    @Override
+    @Transactional
+    public void rejectBatch(Long batchId, Long userId, String remarks) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        PayrollBatch batch = batchRepo.findById(batchId)
+                .orElseThrow(() -> new RuntimeException("Batch not found"));
+
+        // ✅ Only roleId = 4 can reject
+        if (user.getRole() == null || user.getRole().getRoleId() != 4) {
+            throw new AccessDeniedException("Only approvers (roleId=4) can reject batches");
+        }
+
+        // ✅ Already finalized
+        if (batch.getStatus() == BatchStatus.FULLY_APPROVED || batch.getStatus() == BatchStatus.REJECTED) {
+            throw new IllegalStateException("Batch already finalized and cannot be changed");
+        }
+
+        // ✅ One approver only once
+        if (remarksRepo.existsByBatchIdAndApproverId(batchId, userId)) {
+            throw new IllegalStateException("This approver has already acted on the batch");
+        }
+
+        // Save remarks
+        ApproverRemarks remark = new ApproverRemarks(
+                user.getUsername(),
+                remarks,
+                "REJECT",
+                batchId,
+                userId
+        );
+        remarksRepo.save(remark);
+
+        // Rejection overrides everything
+        batch.setStatus(BatchStatus.REJECTED);
+        batchRepo.save(batch);
+    }
+
+    @Override
+    public List<ApproverRemarks> getRemarksByBatch(Long batchId) {
+        return remarksRepo.findByBatchId(batchId);
+    }
+
+    @Override
+    public int getApprovalCount(Long batchId) {
+        return countRepo.findByBatchId(batchId)
+                .map(ApprovalCount::getCount)
+                .orElse(0);
+    }
+}
+
+
+
+
+
+
+
+
+package com.example.payroll.controller;
+
+import com.example.payroll.entity.ApproverRemarks;
+import com.example.payroll.service.ApprovalService;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/approval")
+public class ApprovalController {
+
+    private final ApprovalService approvalService;
+
+    public ApprovalController(ApprovalService approvalService) {
+        this.approvalService = approvalService;
+    }
+
+    // ✅ Only roleId=4 can approve
+    @PreAuthorize("hasAuthority('ROLE_4')")
+    @PostMapping("/approve/{batchId}")
+    public String approveBatch(@PathVariable Long batchId,
+                               @RequestParam Long userId,
+                               @RequestParam String remarks) {
+        approvalService.approveBatch(batchId, userId, remarks);
+        return "Batch approved successfully";
+    }
+
+    // ✅ Only roleId=4 can reject
+    @PreAuthorize("hasAuthority('ROLE_4')")
+    @PostMapping("/reject/{batchId}")
+    public String rejectBatch(@PathVariable Long batchId,
+                              @RequestParam Long userId,
+                              @RequestParam String remarks) {
+        approvalService.rejectBatch(batchId, userId, remarks);
+        return "Batch rejected successfully";
+    }
+
+    @GetMapping("/remarks/{batchId}")
+    public List<ApproverRemarks> getRemarks(@PathVariable Long batchId) {
+        return approvalService.getRemarksByBatch(batchId);
+    }
+
+    @GetMapping("/count/{batchId}")
+    public int getApprovalCount(@PathVariable Long batchId) {
+        return approvalService.getApprovalCount(batchId);
+    }
+}
+
+
+
+
+
+
+package com.example.demo.service.impl;
+
+import com.example.demo.entity.ApproverRemarks;
+import com.example.demo.repository.ApproverRemarksRepository;
+import com.example.demo.service.ApproverRemarksService;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class ApproverRemarksServiceImpl implements ApproverRemarksService {
+
+    private final ApproverRemarksRepository repository;
+
+    public ApproverRemarksServiceImpl(ApproverRemarksRepository repository) {
+        this.repository = repository;
+    }
+
+    @Override
+    public ApproverRemarks saveRemarks(ApproverRemarks remarks) {
+        return repository.save(remarks);
+    }
+
+    @Override
+    public List<ApproverRemarks> getRemarksByBatch(Long batchId) {
+        return repository.findByPayrollBatchId(batchId);
+    }
+
+    @Override
+    public List<ApproverRemarks> getRemarksByApprover(Long approverId) {
+        return repository.findByApproverId(approverId);
+    }
+}
+
+
+
+
+
+
+
+package com.example.demo.controller;
+
+import com.example.demo.entity.ApproverRemarks;
+import com.example.demo.service.ApproverRemarksService;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/approver-remarks")
+public class ApproverRemarksController {
+
+    private final ApproverRemarksService service;
+
+    public ApproverRemarksController(ApproverRemarksService service) {
+        this.service = service;
+    }
+
+    @PostMapping
+    public ApproverRemarks saveRemarks(@RequestBody ApproverRemarks remarks) {
+        return service.saveRemarks(remarks);
+    }
+
+    @GetMapping("/batch/{batchId}")
+    public List<ApproverRemarks> getRemarksByBatch(@PathVariable Long batchId) {
+        return service.getRemarksByBatch(batchId);
+    }
+
+    @GetMapping("/approver/{approverId}")
+    public List<ApproverRemarks> getRemarksByApprover(@PathVariable Long approverId) {
+        return service.getRemarksByApprover(approverId);
+    }
+}
