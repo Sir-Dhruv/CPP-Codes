@@ -1,0 +1,27 @@
+import java.time.LocalDate;
+import java.util.Random;
+
+public class RandomDatePicker {
+    public static void main(String[] args) {
+        LocalDate[] last12MonthsDates = {
+            LocalDate.of(2025, 9, 5),
+            LocalDate.of(2025, 8, 18),
+            LocalDate.of(2025, 7, 22),
+            LocalDate.of(2025, 6, 10),
+            LocalDate.of(2025, 5, 30),
+            LocalDate.of(2025, 4, 15),
+            LocalDate.of(2025, 3, 9),
+            LocalDate.of(2025, 2, 27),
+            LocalDate.of(2025, 1, 12),
+            LocalDate.of(2024, 12, 21),
+            LocalDate.of(2024, 11, 7),
+            LocalDate.of(2024, 10, 16)
+        };
+
+        Random random = new Random();
+        int randomIndex = random.nextInt(last12MonthsDates.length); // 0 to 11
+        LocalDate randomDate = last12MonthsDates[randomIndex];
+
+        System.out.println("Randomly picked date: " + randomDate);
+    }
+}
