@@ -1,0 +1,26 @@
+import java.util.Random;
+
+public class RandomDatePicker {
+    public static void main(String[] args) {
+        String[] last12MonthsDates = {
+            "2025-09-05",
+            "2025-08-18",
+            "2025-07-22",
+            "2025-06-10",
+            "2025-05-30",
+            "2025-04-15",
+            "2025-03-09",
+            "2025-02-27",
+            "2025-01-12",
+            "2024-12-21",
+            "2024-11-07",
+            "2024-10-16"
+        };
+
+        Random random = new Random();
+        int randomIndex = random.nextInt(last12MonthsDates.length); // 0 to 11
+        String randomDate = last12MonthsDates[randomIndex];
+
+        System.out.println("Randomly picked date: " + randomDate);
+    }
+}
