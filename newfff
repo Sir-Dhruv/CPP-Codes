@@ -1,0 +1,207 @@
+import React, { useEffect, useState } from "react";
+import {
+  Container,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Button,
+  Chip,
+  CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Snackbar,
+  Alert,
+} from "@mui/material";
+import axios from "axios";
+
+const API_BASE_URL = "http://localhost:8080/api"; // adjust if needed
+
+const ApprovalPage = () => {
+  const [batches, setBatches] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedBatch, setSelectedBatch] = useState(null);
+  const [actionType, setActionType] = useState(null);
+  const [approverName, setApproverName] = useState("");
+  const [remarks, setRemarks] = useState("");
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", type: "success" });
+
+  const fetchBatches = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${API_BASE_URL}/batches`);
+      setBatches(res.data);
+    } catch (err) {
+      console.error("Error fetching batches", err);
+      setSnackbar({ open: true, message: "Failed to fetch batches", type: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBatches();
+  }, []);
+
+  const handleOpenDialog = (batch, action) => {
+    setSelectedBatch(batch);
+    setActionType(action);
+  };
+
+  const handleSubmit = async () => {
+    if (!approverName || !remarks) {
+      setSnackbar({ open: true, message: "Fill approver name and remarks", type: "error" });
+      return;
+    }
+    try {
+      if (actionType === "APPROVE") {
+        await axios.post(`${API_BASE_URL}/approvals/approve/${selectedBatch.batchId}`, null, {
+          params: { approverName, remarks },
+        });
+      } else {
+        await axios.post(`${API_BASE_URL}/approvals/reject/${selectedBatch.batchId}`, null, {
+          params: { approverName, remarks },
+        });
+      }
+      setSnackbar({
+        open: true,
+        message: `Batch ${actionType.toLowerCase()}d successfully`,
+        type: "success",
+      });
+      fetchBatches();
+    } catch (err) {
+      console.error("Error updating batch", err);
+      setSnackbar({ open: true, message: "Failed to update batch", type: "error" });
+    } finally {
+      handleCloseDialog();
+    }
+  };
+
+  const handleCloseDialog = () => {
+    setSelectedBatch(null);
+    setActionType(null);
+    setApproverName("");
+    setRemarks("");
+  };
+
+  return (
+    <Container>
+      <Typography variant="h4" gutterBottom sx={{ mt: 3, mb: 3 }}>
+        Payroll Batch Approval System
+      </Typography>
+
+      {loading ? (
+        <CircularProgress />
+      ) : (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Batch ID</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Required Approvers</TableCell>
+                <TableCell>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {batches.map((batch) => (
+                <TableRow key={batch.batchId}>
+                  <TableCell>{batch.batchId}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={batch.status}
+                      color={
+                        batch.status === "FULLY_APPROVED"
+                          ? "success"
+                          : batch.status === "REJECTED"
+                          ? "error"
+                          : "warning"
+                      }
+                    />
+                  </TableCell>
+                  <TableCell>{batch.requiredApprovers}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="contained"
+                      color="success"
+                      onClick={() => handleOpenDialog(batch, "APPROVE")}
+                      sx={{ mr: 1 }}
+                    >
+                      Approve
+                    </Button>
+                    <Button
+                      variant="contained"
+                      color="error"
+                      onClick={() => handleOpenDialog(batch, "REJECT")}
+                    >
+                      Reject
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+
+      {/* Approve/Reject Dialog */}
+      <Dialog open={!!selectedBatch} onClose={handleCloseDialog}>
+        <DialogTitle>
+          {actionType === "APPROVE" ? "Approve Batch" : "Reject Batch"}
+        </DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Approver Name"
+            fullWidth
+            margin="dense"
+            value={approverName}
+            onChange={(e) => setApproverName(e.target.value)}
+          />
+          <TextField
+            label="Remarks"
+            fullWidth
+            multiline
+            rows={3}
+            margin="dense"
+            value={remarks}
+            onChange={(e) => setRemarks(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog}>Cancel</Button>
+          <Button
+            onClick={handleSubmit}
+            variant="contained"
+            color={actionType === "APPROVE" ? "success" : "error"}
+          >
+            {actionType}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar Notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert
+          severity={snackbar.type}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </Container>
+  );
+};
+
+export default ApprovalPage;
