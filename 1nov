@@ -1,0 +1,192 @@
+package cupid.com.action;
+
+import static org.mockito.Mockito.*;
+import static org.junit.Assert.*;
+
+import javax.servlet.http.HttpServletRequest;
+
+import cupid.com.constants.CupidConstants;
+import cupid.com.constants.IndividualPartyHomeActionMode;
+import cupid.com.constants.ModuleNames;
+import cupid.com.pojo.IndPartyHomeFormEntity;
+import cupid.com.util.CpdBusinessServiceUtil;
+import cupid.com.util.CupidUtility;
+
+import scb.common.entity.ServiceObject;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import org.mockito.internal.util.reflection.FieldSetter;
+import org.mockito.runners.MockitoJUnitRunner;
+
+@RunWith(MockitoJUnitRunner.class)
+public class RolesAndRelatedCifActionTest {
+
+    @Mock
+    private HttpServletRequest request;
+
+    @Mock
+    private ServiceObject serviceObject;
+
+    private RolesAndRelatedCifAction action;
+    private IndPartyHomeFormEntity model;
+
+    @Before
+    public void setUp() throws Exception {
+        MockitoAnnotations.initMocks(this);
+
+        action = new RolesAndRelatedCifAction();
+        model = new IndPartyHomeFormEntity();
+
+        // inject mock request
+        new FieldSetter(action, 
+            RolesAndRelatedCifAction.class.getDeclaredField("request")).set(request);
+
+        // inject form model
+        action.setIndPartyHomeFormEntity(model);
+    }
+
+    // ---------------------------
+    // loadRolesAndRelated() Tests
+    // ---------------------------
+    @Test
+    public void testLoadRolesAndRelated_Success() {
+
+        // attributes
+        model.setAttribute(CupidConstants.NON_PERSONAL_PARTY_ID, "NP123");
+        model.setAttribute(CupidConstants.VIEW_TYPE, "VIEW1");
+
+        // mocked business service return
+        when(CpdBusinessServiceUtil.callBusinessService(
+                any(), anyString(), any()))
+                .thenReturn(serviceObject);
+
+        when(serviceObject.getErrorObject()).thenReturn(null);
+        when(serviceObject.getDataObject()).thenReturn(model);
+
+        String result = action.loadRolesAndRelated();
+
+        assertEquals("success", result.toLowerCase());
+        verify(request).setAttribute(eq("nonpersonalPartyId"), eq("NP123"));
+        verify(request).setAttribute(eq("viewType"), eq("VIEW1"));
+    }
+
+    @Test
+    public void testLoadRolesAndRelated_Error() {
+
+        when(CpdBusinessServiceUtil.callBusinessService(
+                any(), anyString(), any()))
+                .thenReturn(serviceObject);
+
+        // simulate error
+        when(action.processActionErrors(any())).thenReturn(true);
+
+        String result = action.loadRolesAndRelated();
+
+        assertEquals("error", result.toLowerCase());
+    }
+
+    // ---------------------------------------
+    // loadIndividualRolesAndRelated() Tests
+    // ---------------------------------------
+    @Test
+    public void testLoadIndividualRolesAndRelated_Success() {
+
+        model.setAttribute(CupidConstants.PERSONAL_PARTY_ID, "P123");
+        model.setAttribute(CupidConstants.VIEW_TYPE, "VTYPE");
+
+        when(CpdBusinessServiceUtil.callBusinessService(
+                any(), anyString(), any()))
+                .thenReturn(serviceObject);
+
+        when(serviceObject.getErrorObject()).thenReturn(null);
+        when(serviceObject.getDataObject()).thenReturn(model);
+
+        String result = action.loadIndividualRolesAndRelated();
+
+        assertEquals("success", result.toLowerCase());
+        verify(request).setAttribute("personalPartyId", "P123");
+        verify(request).setAttribute("viewType", "VTYPE");
+    }
+
+    @Test
+    public void testLoadIndividualRolesAndRelated_Error() {
+
+        when(CpdBusinessServiceUtil.callBusinessService(
+                any(), anyString(), any()))
+                .thenReturn(serviceObject);
+
+        when(action.processActionErrors(any())).thenReturn(true);
+
+        String result = action.loadIndividualRolesAndRelated();
+
+        assertEquals("error", result.toLowerCase());
+    }
+
+    // ---------------------------
+    // loadNonPersonalParty()
+    // ---------------------------
+    @Test
+    public void testLoadNonPersonalParty() {
+
+        model.setAttribute(CupidConstants.NON_PERSONAL_PARTY_ID, "NP999");
+        model.setAttribute(CupidConstants.VIEW_TYPE, "ABC");
+
+        String result = action.loadNonPersonalParty();
+
+        assertEquals("success", result.toLowerCase());
+
+        verify(request).setAttribute("nonpersonalPartyId", "NP999");
+        verify(request).setAttribute("viewType", "ABC");
+    }
+
+    // ---------------------------
+    // loadIndParty()
+    // ---------------------------
+    @Test
+    public void testLoadIndParty() {
+
+        model.setAttribute(CupidConstants.PERSONAL_PARTY_ID, "P777");
+        model.setAttribute(CupidConstants.VIEW_TYPE, "XYZ");
+
+        String result = action.loadIndParty();
+
+        assertEquals("success", result.toLowerCase());
+
+        verify(request).setAttribute("personalPartyId", "P777");
+        verify(request).setAttribute("viewType", "XYZ");
+    }
+
+    // ---------------------------
+    // showPartyAmendment()
+    // ---------------------------
+    @Test
+    public void testShowPartyAmendment() {
+
+        model.setAttribute(CupidConstants.SESSION_USERID, "U1000");
+
+        String res = action.showPartyAmendement();
+
+        assertEquals("success", res.toLowerCase());
+        verify(request).setAttribute("userId", "U1000");
+    }
+
+    // ---------------------------
+    // Model getter/setter tests
+    // ---------------------------
+    @Test
+    public void testModelGetterSetter() {
+        action.setIndPartyHomeFormEntity(model);
+        assertEquals(model, action.getIndPartyHomeFormEntity());
+    }
+
+    @Test
+    public void testServletRequestSetter() {
+        action.withServletRequest(request);
+        assertEquals(request, action.getRequest());
+    }
+}
